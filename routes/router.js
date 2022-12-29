@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express();
-const { sendMessageToBot } = require('../controllers/messages');
+const { saveOrder } = require('../controllers/messages');
 
-router.post('/sendMessage', sendMessageToBot);
+router.post('/saveOrder', saveOrder);
 
 module.exports = {
   router,

@@ -1,27 +1,47 @@
 const dotenv = require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const app = express();
+const mongoose = require('mongoose');
+const User = require('./models/User');
 const { router } = require('./routes/router');
-
 const TelegramBot = require('node-telegram-bot-api');
+
+const app = express();
+
+app.use(cors({origin: "http://127.0.0.1:5173", credentials: true, allowedHeaders: "Content-Type, Authorization"}));
 
 const drawingBot = new TelegramBot(process.env.TOKEN, {
   polling: true,
 });
 
-app.use(cors({origin: "http://127.0.0.1:5173", credentials: true, allowedHeaders: "Content-Type, Authorization"}))
+//db connection
+mongoose.connect('mongodb://127.0.0.1:27017/bot');
 
-// drawingBot.on("new_chat_members", (message) => {
-//   console.log(message.chat.id);
-//   // artBot.sendMessage()
-// });
-
+//bot commands
 drawingBot.on('message', (message) => {
   if(message.text === '/start') {
-    drawingBot.sendMessage(message.chat.id, "Как рисование?")
+    return drawingBot.sendMessage(message.chat.id, `Здравствуйте, ${message.chat.first_name}!`)
   }
-  // artBot.sendMessage()
+
+  if(message.text === '/profile') {
+    // console.log(message);
+    return drawingBot.sendMessage(message.chat.id, `Ваш профиль - ${message.from.username}. Предоставьте, пожалуйста, свой номер телефона, чтобы найти Ваши заказы`, {
+      reply_markup: {
+        one_time_keyboard: true,
+        keyboard: [[{text: "Поделиться контактом", request_contact: true}], [{text: "Не делиться"}]],
+      }
+    })
+    .then(() => {
+      drawingBot.once("contact", (msg) => {
+        User.find({})
+        .then((docs) => {
+          console.log(docs);
+        });
+        // drawingBot.sendMessage(message.chat.id , ``)
+      })
+    })
+  }
+  
 });
 app.use(express.json());
 app.use("/", router);
