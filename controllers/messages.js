@@ -5,21 +5,41 @@ const testDesc = 'Фактура и текстура в коллаже: 1000 (1 
 const saveOrder = (req, res) => {
 
   const { name, email, phone } = req.body;
-  Order.create({description: testDesc})
+  User.find({ phone: phone })
   .then((doc) => {
-    // console.log(doc);
-    if(!doc) {
+    const foundUser = doc.pop();
+    if(!foundUser) {
+      User.create({ name, email, phone })
+      .then((createdUser) => {
+        if(!createdUser) {
+          return;
+        }
+        Order.create({ description: testDesc, buyer: createdUser })
+        .then((createdOrder) => {
+          Order.populate(createdOrder, { path: "buyer" })
+          .then((orderPopulated) => {
+            User.updateOne(
+              { _id: createdUser._id },
+              {$push: { orders: createdOrder}}
+            )
+            .then((resultOrder) => {
+              console.log(resultOrder);
+            })
+            return res.status(201).send(orderPopulated);
+          })
+          // return res.status(201).send(createdOrder);
+        })
+      })
       return;
     }
-    User.find({phone: phone})
-    .then((foundUser) => {
-      if(!foundUser) {
+    Order.create({ description: testDesc, buyer: foundUser })
+    .then((createdOrder) => {
+      if(!createdOrder) {
         return;
       }
-      console.log(foundUser);
-
-    });
-
+      // createdOrder.populate()
+      return res.status(201).send(createdOrder);
+    })
   })
 };
 

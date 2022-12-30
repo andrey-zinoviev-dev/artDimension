@@ -33,9 +33,10 @@ drawingBot.on('message', (message) => {
     })
     .then(() => {
       drawingBot.once("contact", (msg) => {
-        User.find({})
+        //continue here
+        User.find({phone: msg.contact.phone_number}).populate({path: 'orders', populate: {path: "buyer"}})
         .then((docs) => {
-          console.log(docs);
+
         });
         // drawingBot.sendMessage(message.chat.id , ``)
       })
